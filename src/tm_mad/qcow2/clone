@@ -93,17 +93,17 @@ if [ -n "$ORIGINAL_SIZE" ] && [ "$SIZE" -gt "$ORIGINAL_SIZE" ]; then
     fi
 fi
 
-if [ "$FORMAT" = "qcow2" ] && is_yes "${QCOW2_STANDALONE}"; then
-   CLONE_CMD=$(qcow_dir_cmd "$SRC_PATH" "$DST_PATH" "convert")
-elif [ "$FORMAT" = "qcow2" ]; then
-    CLONE_CMD=$(qcow_dir_cmd $SRC_PATH $DST_PATH "create")
+if [ "$FORMAT" = "qcow2" ]; then
+    if is_yes "${QCOW2_STANDALONE}"; then
+        CLONE_CMD=$(qcow_dir_cmd "$SRC_PATH" "$DST_PATH" "convert")
+    elif [[ "${SPARSE}" =~ ^(no|NO)$ ]]; then
+        CLONE_CMD=$(qcow_dir_cmd "$SRC_PATH" "$DST_PATH" "convert")
+        CLONE_CMD="${CLONE_CMD/-O qcow2/-O qcow2 -S 0}"
+    else
+        CLONE_CMD=$(qcow_dir_cmd $SRC_PATH $DST_PATH "create")
+    fi
 else
     CLONE_CMD="cp $SRC_PATH $DST_PATH"
-fi
-
-if [[ "${SPARSE}" =~ ^(no|NO)$ ]]; then
-    CLONE_CMD=$(qcow_dir_cmd "$SRC_PATH" "$DST_PATH" "convert")
-    CLONE_CMD="${CLONE_CMD/-O qcow2/-O qcow2 -S 0}"
 fi
 
 CLONE_RESIZE_CMD=$(cat <<EOF
